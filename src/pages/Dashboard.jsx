@@ -50,6 +50,16 @@ const emptyResource = {
   published: true
 };
 
+const adminTabs = [
+  ["events", "Events"],
+  ["podcasts", "Podcast Embeds"],
+  ["donations", "Donation Causes"],
+  ["resources", "Resources"],
+  ["rsvps", "RSVPs"],
+  ["gym", "Gym Partners"],
+  ["members", "Members"]
+];
+
 function apiUrl(path) {
   if (!CONVEX_SITE_URL) throw new Error("Set VITE_CONVEX_SITE_URL for the admin portal.");
   return `${CONVEX_SITE_URL}${path}`;
@@ -122,6 +132,7 @@ export function Dashboard() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signOut } = useAuthActions();
   const [activeTab, setActiveTab] = useState("events");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [events, setEvents] = useState([]);
   const [podcasts, setPodcasts] = useState([]);
   const [causes, setCauses] = useState([]);
@@ -377,17 +388,18 @@ export function Dashboard() {
 
           <div className="adminLayout">
             <aside className="adminSidebar">
-              {[
-                ["events", "Events"],
-                ["podcasts", "Podcast Embeds"],
-                ["donations", "Donation Causes"],
-                ["resources", "Resources"],
-                ["rsvps", "RSVPs"],
-                ["gym", "Gym Partners"],
-                ["members", "Members"]
-              ].map(([tab, label]) => (
-                <button className={`tab ${activeTab === tab ? "active" : ""}`} key={tab} onClick={() => setActiveTab(tab)}>{label}</button>
-              ))}
+              <button className="mobileSectionToggle" type="button" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((open) => !open)}>
+                <span>Menu</span>
+                <b>{adminTabs.find(([tab]) => tab === activeTab)?.[1] || "Sections"}</b>
+              </button>
+              <div className={`sectionTabList ${mobileMenuOpen ? "open" : ""}`}>
+                {adminTabs.map(([tab, label]) => (
+                  <button className={`tab ${activeTab === tab ? "active" : ""}`} key={tab} onClick={() => {
+                    setActiveTab(tab);
+                    setMobileMenuOpen(false);
+                  }}>{label}</button>
+                ))}
+              </div>
             </aside>
 
             <div className="adminPanel">
