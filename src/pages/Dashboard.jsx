@@ -60,6 +60,24 @@ const adminTabs = [
   ["members", "Members"]
 ];
 
+const PAGE_SIZE = 5;
+
+function AdminListControls({ label, search, shown, total, onSearch, onLoadMore, onViewAll, canLoadMore }) {
+  return (
+    <div className="adminListControls">
+      <div>
+        <label>{label} Search</label>
+        <input value={search} placeholder={`Search ${label.toLowerCase()}...`} onChange={(event) => onSearch(event.target.value)} />
+      </div>
+      <div className="adminListMeta">
+        <span>{shown} of {total}</span>
+        <button className="btn" type="button" disabled={!canLoadMore} onClick={onLoadMore}>Load More</button>
+        <button className="btn" type="button" disabled={!canLoadMore} onClick={onViewAll}>View All</button>
+      </div>
+    </div>
+  );
+}
+
 function apiUrl(path) {
   if (!CONVEX_SITE_URL) throw new Error("Set VITE_CONVEX_SITE_URL for the admin portal.");
   return `${CONVEX_SITE_URL}${path}`;
@@ -133,6 +151,10 @@ export function Dashboard() {
   const { signOut } = useAuthActions();
   const [activeTab, setActiveTab] = useState("events");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileActivityOpen, setMobileActivityOpen] = useState(false);
+  const [searchTerms, setSearchTerms] = useState({});
+  const [visibleCounts, setVisibleCounts] = useState({});
+  const [viewAllTabs, setViewAllTabs] = useState({});
   const [events, setEvents] = useState([]);
   const [podcasts, setPodcasts] = useState([]);
   const [causes, setCauses] = useState([]);
@@ -216,6 +238,68 @@ export function Dashboard() {
 
   function eventTitle(eventId) {
     return events.find((event) => event._id === eventId)?.title || eventId;
+  }
+
+  function searchText(value) {
+    if (value === null || value === undefined) return "";
+    if (Array.isArray(value)) return value.map(searchText).join(" ");
+    if (typeof value === "object") return Object.values(value).map(searchText).join(" ");
+    return String(value);
+  }
+
+  function listState(key, label, items, fields = (item) => item) {
+    const search = searchTerms[key] || "";
+    const visibleCount = visibleCounts[key] || PAGE_SIZE;
+    const query = search.trim().toLowerCase();
+    const filtered = query
+      ? items.filter((item) => searchText(fields(item)).toLowerCase().includes(query))
+      : items;
+    const visible = viewAllTabs[key] ? filtered : filtered.slice(0, visibleCount);
+    return {
+      key,
+      label,
+      search,
+      filtered,
+      visible,
+      canLoadMore: visible.length < filtered.length,
+      setSearch: (value) => {
+        setSearchTerms((current) => ({ ...current, [key]: value }));
+        setVisibleCounts((current) => ({ ...current, [key]: PAGE_SIZE }));
+        setViewAllTabs((current) => ({ ...current, [key]: false }));
+      },
+      loadMore: () => setVisibleCounts((current) => ({ ...current, [key]: (current[key] || PAGE_SIZE) + PAGE_SIZE })),
+      viewAll: () => setViewAllTabs((current) => ({ ...current, [key]: true }))
+    };
+  }
+
+  const recentEvents = useMemo(() => [...events].sort((a, b) => (b._creationTime || b.startsAt || 0) - (a._creationTime || a.startsAt || 0)), [events]);
+  const recentPodcasts = useMemo(() => [...podcasts].sort((a, b) => (b.publishedAt || b._creationTime || 0) - (a.publishedAt || a._creationTime || 0)), [podcasts]);
+  const recentCauses = useMemo(() => [...causes].sort((a, b) => (b.createdAt || b._creationTime || 0) - (a.createdAt || a._creationTime || 0)), [causes]);
+  const recentResources = useMemo(() => [...resources].sort((a, b) => (b.createdAt || b._creationTime || 0) - (a.createdAt || a._creationTime || 0)), [resources]);
+  const recentUsers = useMemo(() => [...users].sort((a, b) => (b.createdAt || b._creationTime || 0) - (a.createdAt || a._creationTime || 0)), [users]);
+  const recentRsvps = useMemo(() => [...filteredRsvps].sort((a, b) => (b.createdAt || b._creationTime || 0) - (a.createdAt || a._creationTime || 0)), [filteredRsvps]);
+  const recentVolunteers = useMemo(() => [...filteredVolunteers].sort((a, b) => (b.createdAt || b._creationTime || 0) - (a.createdAt || a._creationTime || 0)), [filteredVolunteers]);
+  const recentGymProfiles = useMemo(() => [...gymProfiles].sort((a, b) => (b.createdAt || b._creationTime || 0) - (a.createdAt || a._creationTime || 0)), [gymProfiles]);
+  const recentGymRequests = useMemo(() => [...gymRequests].sort((a, b) => (b.createdAt || b._creationTime || 0) - (a.createdAt || a._creationTime || 0)), [gymRequests]);
+  const recentSafetyReports = useMemo(() => [...safetyReports].sort((a, b) => (b.createdAt || b._creationTime || 0) - (a.createdAt || a._creationTime || 0)), [safetyReports]);
+  const recentUserBlocks = useMemo(() => [...userBlocks].sort((a, b) => (b.createdAt || b._creationTime || 0) - (a.createdAt || a._creationTime || 0)), [userBlocks]);
+  const recentDonations = useMemo(() => [...donations].sort((a, b) => (b.createdAt || b._creationTime || 0) - (a.createdAt || a._creationTime || 0)), [donations]);
+
+  const eventList = listState("events", "Events", recentEvents, (item) => [item.title, item.category, item.location, item.description, item.dateLabel, item.timeLabel]);
+  const podcastList = listState("podcasts", "Podcasts", recentPodcasts, (item) => [item.title, item.platform, item.description, item.youtubeEmbedUrl, item.spotifyEmbedUrl, item.appleMusicEmbedUrl]);
+  const causeList = listState("donations", "Donation Causes", recentCauses, (item) => [item.title, item.description, item.goalCents, item.paymentUrl]);
+  const resourceList = listState("resources", "Resources", recentResources, (item) => [item.name, item.organizationType, item.specialty, item.contactName, item.contactEmail, item.contactPhone, item.website, item.address, item.description]);
+  const rsvpList = listState("rsvps", "RSVPs", recentRsvps, (item) => [item.name, item.email, eventTitle(item.eventId)]);
+  const volunteerList = listState("volunteers", "Volunteers", recentVolunteers, (item) => [item.name, item.email, item.phone, item.role, item.availability, eventTitle(item.eventId)]);
+  const memberList = listState("members", "Members", recentUsers, (item) => [item.name, item.email, item.phone, item.neighborhood, item.familyRole, item.interests, item.preferredContact, item.supportNeeds]);
+  const gymProfileList = listState("gymProfiles", "Gym Profiles", recentGymProfiles, (item) => [item.name, item.email, item.neighborhood, item.preferredGym, item.fitnessLevel, item.days, item.times, item.goals, item.adminStatus, item.notes]);
+  const gymRequestList = listState("gymRequests", "Gym Requests", recentGymRequests, (item) => [item.requesterName, item.requesterEmail, item.recipientName, item.recipientEmail, item.status, item.message]);
+  const safetyReportList = listState("safetyReports", "Safety Reports", recentSafetyReports, (item) => [item.reason, item.reporterEmail, item.reportedEmail, item.status, item.details]);
+  const userBlockList = listState("userBlocks", "User Blocks", recentUserBlocks, (item) => [item.blockerEmail, item.blockedEmail, item.reason]);
+  const donationActivityList = listState("donationActivity", "Donation Activity", recentDonations, (item) => [item.donorName, item.donorEmail, item.amountCents, item.campaign, item.status]);
+
+  function controlsFor(list) {
+    return <AdminListControls label={list.label} search={list.search} shown={list.visible.length} total={list.filtered.length} onSearch={list.setSearch} onLoadMore={list.loadMore} onViewAll={list.viewAll} canLoadMore={list.canLoadMore} />;
   }
 
   async function saveEvent(event) {
@@ -382,8 +466,14 @@ export function Dashboard() {
             <button className="btn" type="button" onClick={() => void signOut()}>Sign Out</button>
           </div>
           {status ? <p className={`adminNotice ${statusIsError ? "error" : "success"}`}>{status}</p> : null}
-          <div className="adminStats">
-            {stats.map(([label, value]) => <div className="adminStat" key={label}><span>{label}</span><b>{value}</b></div>)}
+          <div className="adminActivity">
+            <button className="mobileActivityToggle" type="button" aria-expanded={mobileActivityOpen} onClick={() => setMobileActivityOpen((open) => !open)}>
+              <span>Activity</span>
+              <b>{stats.reduce((sum, [, value]) => sum + Number(value || 0), 0)} total</b>
+            </button>
+            <div className={`adminStats ${mobileActivityOpen ? "open" : ""}`}>
+              {stats.map(([label, value]) => <div className="adminStat" key={label}><span>{label}</span><b>{value}</b></div>)}
+            </div>
           </div>
 
           <div className="adminLayout">
@@ -452,8 +542,9 @@ export function Dashboard() {
                   </div>
                 </div>
               </form>
+              {controlsFor(eventList)}
               <div className="eventList">
-                {events.map((item) => {
+                {eventList.visible.map((item) => {
                   const eventRsvps = rsvps.filter((rsvp) => rsvp.eventId === item._id);
                   const eventVolunteers = volunteers.filter((volunteer) => volunteer.eventId === item._id);
                   return (
@@ -473,7 +564,7 @@ export function Dashboard() {
                     </div>
                   );
                 })}
-                {!events.length ? <div className="listItem"><p>No events yet. Add one above.</p></div> : null}
+                {!eventList.filtered.length ? <div className="listItem"><p>No events match that search.</p></div> : null}
               </div>
             </div>
           )}
@@ -525,9 +616,10 @@ export function Dashboard() {
                   </div>
                 </div>
               </form>
+              {controlsFor(podcastList)}
               <div className="eventList">
-                {podcasts.map((item) => <div className="listItem eventListItem" key={item._id}><div>{item.imageUrl ? <img className="adminListThumb" src={item.imageUrl} alt={item.title} /> : null}<h3>{item.title}</h3><p>{[item.youtubeEmbedUrl && "YouTube", item.spotifyEmbedUrl && "Spotify", item.appleMusicEmbedUrl && "Apple Music"].filter(Boolean).join(" + ") || item.platform}</p><p>{item.description}</p></div><div className="miniActions"><button className="btn" onClick={() => setPodcastForm({ ...emptyPodcast, ...item })}>Edit</button><button className="btn danger" onClick={() => removeItem("/api/admin/podcasts/delete", item._id)}>Delete</button></div></div>)}
-                {!podcasts.length ? <div className="listItem"><p>No podcast embeds yet. Add one above.</p></div> : null}
+                {podcastList.visible.map((item) => <div className="listItem eventListItem" key={item._id}><div>{item.imageUrl ? <img className="adminListThumb" src={item.imageUrl} alt={item.title} /> : null}<h3>{item.title}</h3><p>{[item.youtubeEmbedUrl && "YouTube", item.spotifyEmbedUrl && "Spotify", item.appleMusicEmbedUrl && "Apple Music"].filter(Boolean).join(" + ") || item.platform}</p><p>{item.description}</p></div><div className="miniActions"><button className="btn" onClick={() => setPodcastForm({ ...emptyPodcast, ...item })}>Edit</button><button className="btn danger" onClick={() => removeItem("/api/admin/podcasts/delete", item._id)}>Delete</button></div></div>)}
+                {!podcastList.filtered.length ? <div className="listItem"><p>No podcast embeds match that search.</p></div> : null}
               </div>
             </div>
           )}
@@ -562,10 +654,11 @@ export function Dashboard() {
                   </div>
                 </div>
               </form>
+              {controlsFor(causeList)}
               <div className="eventList">
-                {causes.map((item) => <div className="listItem eventListItem" key={item._id}><div><h3>{item.title}</h3><p>Goal: ${Math.round(item.goalCents / 100).toLocaleString()}</p><p>{item.description}</p></div><div className="miniActions"><button className="btn" onClick={() => setCauseForm({ ...item, goal: centsToDollars(item.goalCents) })}>Edit</button><button className="btn danger" onClick={() => removeItem("/api/admin/causes/delete", item._id)}>Delete</button></div></div>)}
-                {!causes.length ? <div className="listItem"><p>No donation causes yet. Add one above.</p></div> : null}
-                <div className="listItem"><h3>Donation Activity</h3>{donations.length ? donations.map((item) => <p key={item._id}>{item.donorEmail} pledged ${(item.amountCents / 100).toFixed(2)}</p>) : <p>No donation activity yet.</p>}</div>
+                {causeList.visible.map((item) => <div className="listItem eventListItem" key={item._id}><div><h3>{item.title}</h3><p>Goal: ${Math.round(item.goalCents / 100).toLocaleString()}</p><p>{item.description}</p></div><div className="miniActions"><button className="btn" onClick={() => setCauseForm({ ...item, goal: centsToDollars(item.goalCents) })}>Edit</button><button className="btn danger" onClick={() => removeItem("/api/admin/causes/delete", item._id)}>Delete</button></div></div>)}
+                {!causeList.filtered.length ? <div className="listItem"><p>No donation causes match that search.</p></div> : null}
+                <div className="listItem"><h3>Donation Activity</h3>{controlsFor(donationActivityList)}{donationActivityList.visible.length ? donationActivityList.visible.map((item) => <p key={item._id}>{item.donorEmail} pledged ${(item.amountCents / 100).toFixed(2)}</p>) : <p>No donation activity matches that search.</p>}</div>
               </div>
             </div>
           )}
@@ -580,7 +673,8 @@ export function Dashboard() {
                   {events.map((event) => <option value={event._id} key={event._id}>{event.title}</option>)}
                 </select>
               </div>
-              {filteredRsvps.length ? filteredRsvps.map((item) => (
+              {controlsFor(rsvpList)}
+              {rsvpList.visible.length ? rsvpList.visible.map((item) => (
                 <div className="listItem" key={item._id}>
                   <h3>{item.name}</h3>
                   <p>{item.email}</p>
@@ -588,7 +682,8 @@ export function Dashboard() {
                 </div>
               )) : <div className="listItem"><p>No RSVPs match this filter.</p></div>}
               <div className="listItem"><h3>Volunteers</h3></div>
-              {filteredVolunteers.length ? filteredVolunteers.map((item) => (
+              {controlsFor(volunteerList)}
+              {volunteerList.visible.length ? volunteerList.visible.map((item) => (
                 <div className="listItem" key={item._id}>
                   <h3>{item.name}</h3>
                   <p>{item.email}{item.phone ? ` | ${item.phone}` : ""}</p>
@@ -650,9 +745,10 @@ export function Dashboard() {
                   </div>
                 </div>
               </form>
+              {controlsFor(resourceList)}
               <div className="eventList">
-                {resources.map((item) => <div className="listItem eventListItem" key={item._id}><div><h3>{item.name}</h3><p>{item.organizationType} | {item.specialty}</p><p>{item.contactPhone || item.contactEmail || item.website || "No contact listed"}</p><p>{item.description}</p></div><div className="miniActions"><button className="btn" onClick={() => setResourceForm({ ...emptyResource, ...item })}>Edit</button><button className="btn danger" onClick={() => removeItem("/api/admin/resources/delete", item._id)}>Delete</button></div></div>)}
-                {!resources.length ? <div className="listItem"><p>No resources yet. Add one above.</p></div> : null}
+                {resourceList.visible.map((item) => <div className="listItem eventListItem" key={item._id}><div><h3>{item.name}</h3><p>{item.organizationType} | {item.specialty}</p><p>{item.contactPhone || item.contactEmail || item.website || "No contact listed"}</p><p>{item.description}</p></div><div className="miniActions"><button className="btn" onClick={() => setResourceForm({ ...emptyResource, ...item })}>Edit</button><button className="btn danger" onClick={() => removeItem("/api/admin/resources/delete", item._id)}>Delete</button></div></div>)}
+                {!resourceList.filtered.length ? <div className="listItem"><p>No resources match that search.</p></div> : null}
               </div>
             </div>
           )}
@@ -664,7 +760,8 @@ export function Dashboard() {
                   <h3>Gym Partner Profiles</h3>
                   <p>{gymProfiles.filter((profile) => profile.active).length} active profile{gymProfiles.filter((profile) => profile.active).length === 1 ? "" : "s"}.</p>
                 </div>
-                {gymProfiles.length ? gymProfiles.map((profile) => (
+                {controlsFor(gymProfileList)}
+                {gymProfileList.visible.length ? gymProfileList.visible.map((profile) => (
                   <div className="listItem memberItem" key={profile._id}>
                     <h3>{profile.name}</h3>
                     <p>{profile.email} | {profile.neighborhood || "Neighborhood not listed"}</p>
@@ -687,7 +784,8 @@ export function Dashboard() {
               </div>
               <div className="tableList">
                 <div className="listItem"><h3>Gym Partner Requests</h3></div>
-                {gymRequests.length ? gymRequests.map((request) => (
+                {controlsFor(gymRequestList)}
+                {gymRequestList.visible.length ? gymRequestList.visible.map((request) => (
                   <div className="listItem memberItem" key={request._id}>
                     <h3>{request.requesterName} to {request.recipientName}</h3>
                     <p>{request.requesterEmail} to {request.recipientEmail}</p>
@@ -698,7 +796,8 @@ export function Dashboard() {
               </div>
               <div className="tableList">
                 <div className="listItem"><h3>Safety Reports</h3></div>
-                {safetyReports.length ? safetyReports.map((report) => (
+                {controlsFor(safetyReportList)}
+                {safetyReportList.visible.length ? safetyReportList.visible.map((report) => (
                   <div className="listItem memberItem" key={report._id}>
                     <h3>{report.reason}</h3>
                     <p>Reporter: {report.reporterEmail}</p>
@@ -715,7 +814,8 @@ export function Dashboard() {
               </div>
               <div className="tableList">
                 <div className="listItem"><h3>User Blocks</h3></div>
-                {userBlocks.length ? userBlocks.map((block) => (
+                {controlsFor(userBlockList)}
+                {userBlockList.visible.length ? userBlockList.visible.map((block) => (
                   <div className="listItem" key={block._id}>
                     <h3>{block.blockerEmail} blocked {block.blockedEmail}</h3>
                     {block.reason ? <p>{block.reason}</p> : null}
@@ -727,7 +827,8 @@ export function Dashboard() {
 
           {activeTab === "members" && (
             <div className="tableList">
-              {users.length ? users.map((user) => (
+              {controlsFor(memberList)}
+              {memberList.visible.length ? memberList.visible.map((user) => (
                 <div className="listItem memberItem" key={user._id}>
                   <h3>{user.name}</h3>
                   <p>{user.email}{user.phone ? ` | ${user.phone}` : ""}</p>
@@ -736,7 +837,7 @@ export function Dashboard() {
                   {user.preferredContact ? <p>Preferred contact: {user.preferredContact}</p> : null}
                   {user.supportNeeds ? <p>{user.supportNeeds}</p> : null}
                 </div>
-              )) : <div className="listItem"><p>No members yet.</p></div>}
+              )) : <div className="listItem"><p>No members match that search.</p></div>}
             </div>
           )}
             </div>
