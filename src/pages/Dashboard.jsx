@@ -150,7 +150,6 @@ export function Dashboard() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signOut } = useAuthActions();
   const [activeTab, setActiveTab] = useState("events");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileActivityOpen, setMobileActivityOpen] = useState(false);
   const [searchTerms, setSearchTerms] = useState({});
   const [visibleCounts, setVisibleCounts] = useState({});
@@ -478,15 +477,10 @@ export function Dashboard() {
 
           <div className="adminLayout">
             <aside className="adminSidebar">
-              <button className="mobileSectionToggle" type="button" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((open) => !open)}>
-                <span>Menu</span>
-                <b>{adminTabs.find(([tab]) => tab === activeTab)?.[1] || "Sections"}</b>
-              </button>
               <div className="sectionTabList">
                 {adminTabs.map(([tab, label]) => (
                   <button className={`tab ${activeTab === tab ? "active" : ""}`} key={tab} onClick={() => {
                     setActiveTab(tab);
-                    setMobileMenuOpen(false);
                   }}>{label}</button>
                 ))}
               </div>
@@ -844,28 +838,6 @@ export function Dashboard() {
           </div>
         </div>
       </section>
-      {mobileMenuOpen ? (
-        <div className="adminSheetOverlay" role="presentation" onClick={() => setMobileMenuOpen(false)}>
-          <div className="adminBottomSheet" role="dialog" aria-modal="true" aria-label="Admin sections" onClick={(event) => event.stopPropagation()}>
-            <div className="adminSheetHandle" />
-            <div className="adminSheetHead">
-              <div>
-                <span>Admin Menu</span>
-                <b>{adminTabs.find(([tab]) => tab === activeTab)?.[1] || "Sections"}</b>
-              </div>
-              <button className="btn" type="button" onClick={() => setMobileMenuOpen(false)}>Close</button>
-            </div>
-            <div className="adminSheetTabs">
-              {adminTabs.map(([tab, label]) => (
-                <button className={`tab ${activeTab === tab ? "active" : ""}`} key={tab} onClick={() => {
-                  setActiveTab(tab);
-                  setMobileMenuOpen(false);
-                }}>{label}</button>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : null}
     </>
   );
 }
