@@ -10,7 +10,7 @@ export const adminModules = [
     body: "Track donation totals, campaigns, invoices, and supporter activity."
   },
   {
-    title: "Podcast Embeds",
+    title: "Podcasts",
     metric: "podcastCount",
     body: "Add podcast links, featured episodes, and live conversation details."
   },
