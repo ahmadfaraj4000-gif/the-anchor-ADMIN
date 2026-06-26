@@ -110,6 +110,8 @@ label{font-weight:750;font-size:14px}
 .adminLayout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px;align-items:start}
 .adminSidebar{position:sticky;top:96px;display:grid;gap:8px}
 .adminSidebar .tab{width:100%;display:flex;border-radius:14px;text-align:left;justify-content:flex-start}
+.mobileSectionToggle{display:none}
+.sectionTabList{display:grid;gap:8px}
 .adminPanel{min-width:0}
 .adminPanel .form{width:100%;max-width:none;margin:0;padding:32px}
 .adminGrid{display:grid;grid-template-columns:minmax(560px,.95fr) minmax(420px,1.05fr);gap:22px;align-items:start}
@@ -160,10 +162,58 @@ label{font-weight:750;font-size:14px}
   .editorWide{grid-column:auto}
   .editorActions{justify-content:flex-start}
   .authGrid{display:flex}
-  .adminSidebar{position:static}
+  .adminHeader.withAction{display:grid}
+  .adminHeader.withAction .btn{width:100%}
+  .adminSidebar{
+    position:static;
+    display:grid;
+    gap:8px;
+    padding:10px;
+    margin:-4px 0 8px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:rgba(247,250,248,.96);
+    box-shadow:0 8px 20px rgba(0,0,0,.06);
+  }
+  .mobileSectionToggle{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    min-height:48px;
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+    color:var(--dark);
+    font:inherit;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .mobileSectionToggle span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+  .mobileSectionToggle b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mobileSectionToggle::after{content:"";width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);flex:0 0 auto}
+  .mobileSectionToggle[aria-expanded="true"]::after{transform:rotate(225deg) translateY(-2px)}
+  .sectionTabList{display:none}
+  .sectionTabList.open{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .adminSidebar .tab{
+    min-height:46px;
+    width:100%;
+    justify-content:center;
+    text-align:center;
+    border-radius:8px;
+    padding:10px 8px;
+    font-size:14px;
+    line-height:1.15;
+  }
   .links{display:none}
   .h1{font-size:48px}
   .statrow{grid-template-columns:1fr}
+}
+
+@media(max-width:390px){
+  .sectionTabList.open{grid-template-columns:1fr}
 }
 
 .adminAuthGate{min-height:100vh;display:grid;place-items:center;padding:32px;background:#f3f6f4}
