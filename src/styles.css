@@ -104,6 +104,7 @@ label{font-weight:750;font-size:14px}
 .featureList{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .featureList div,.listItem{padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff}
 .adminStats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:24px 0}
+.mobileActivityToggle{display:none}
 .adminStat{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.035)}
 .adminStat span{font-size:13px;color:var(--muted);font-weight:800}
 .adminStat b{font-size:24px;color:var(--green)}
@@ -143,6 +144,12 @@ label{font-weight:750;font-size:14px}
 .eventList{display:grid;gap:10px}
 .eventListItem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center}
 .tableList{display:grid;gap:12px}
+.adminListControls{display:grid;grid-template-columns:minmax(260px,1fr) auto;gap:12px;align-items:end;padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.adminListControls label{display:block;margin-bottom:6px}
+.adminListControls input{margin:0;height:44px}
+.adminListMeta{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.adminListMeta span{color:var(--muted);font-weight:850;white-space:nowrap}
+.adminListMeta .btn{min-height:44px;padding:10px 14px}
 .listItem h3{margin:0 0 8px}
 .listItem p{margin:6px 0;color:var(--muted);line-height:1.45}
 .miniActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -165,6 +172,28 @@ label{font-weight:750;font-size:14px}
   .authGrid{display:flex}
   .adminHeader.withAction{display:grid}
   .adminHeader.withAction .btn{width:100%}
+  .adminActivity{display:grid;gap:8px;margin:14px 0}
+  .mobileActivityToggle{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    min-height:46px;
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#fff;
+    color:var(--dark);
+    font:inherit;
+    font-weight:900;
+  }
+  .mobileActivityToggle span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+  .mobileActivityToggle b{color:var(--green)}
+  .mobileActivityToggle::after{content:"";width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);flex:0 0 auto}
+  .mobileActivityToggle[aria-expanded="true"]::after{transform:rotate(225deg) translateY(-2px)}
+  .adminStats{display:none;margin:0}
+  .adminStats.open{display:grid}
   .adminSidebar{
     position:static;
     display:block;
@@ -254,6 +283,10 @@ label{font-weight:750;font-size:14px}
     line-height:1.15;
   }
   .adminPanel .form{padding:18px}
+  .adminListControls{grid-template-columns:1fr;padding:12px;border-radius:10px}
+  .adminListMeta{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .adminListMeta span{grid-column:1/-1}
+  .adminListMeta .btn{width:100%}
   .compactEditor{padding:18px}
   .editorHead{align-items:flex-start}
   .editorActions{display:grid;grid-template-columns:1fr;gap:8px}
