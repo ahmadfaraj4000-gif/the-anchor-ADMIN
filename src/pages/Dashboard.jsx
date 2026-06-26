@@ -52,7 +52,7 @@ const emptyResource = {
 
 const adminTabs = [
   ["events", "Events"],
-  ["podcasts", "Podcast Embeds"],
+  ["podcasts", "Podcasts"],
   ["donations", "Donation Causes"],
   ["resources", "Resources"],
   ["rsvps", "RSVPs"],
@@ -208,7 +208,7 @@ export function Dashboard() {
 
   const stats = useMemo(() => ([
     ["Events", events.length],
-    ["Podcast Embeds", podcasts.length],
+    ["Podcasts", podcasts.length],
     ["Donation Causes", causes.length],
     ["Resources", resources.length],
     ["Media", media.length],
@@ -576,20 +576,16 @@ export function Dashboard() {
                     <input required value={podcastForm.title} onChange={(event) => setPodcastForm({ ...podcastForm, title: event.target.value })} />
                   </div>
                   <div>
-                    <label>Platform</label>
-                    <select value={podcastForm.platform} onChange={(event) => setPodcastForm({ ...podcastForm, platform: event.target.value })}><option>YouTube</option><option>Spotify</option><option>Apple Music</option></select>
+                    <label>YouTube Link</label>
+                    <input placeholder="https://youtube.com/..." value={podcastForm.youtubeEmbedUrl || ""} onChange={(event) => setPodcastForm({ ...podcastForm, youtubeEmbedUrl: event.target.value, embedUrl: event.target.value || podcastForm.embedUrl })} />
                   </div>
                   <div>
-                    <label>YouTube Embed</label>
-                    <input value={podcastForm.youtubeEmbedUrl || ""} onChange={(event) => setPodcastForm({ ...podcastForm, youtubeEmbedUrl: event.target.value, embedUrl: event.target.value || podcastForm.embedUrl })} />
+                    <label>Spotify Link</label>
+                    <input placeholder="https://open.spotify.com/..." value={podcastForm.spotifyEmbedUrl || ""} onChange={(event) => setPodcastForm({ ...podcastForm, spotifyEmbedUrl: event.target.value })} />
                   </div>
                   <div>
-                    <label>Spotify Embed</label>
-                    <input value={podcastForm.spotifyEmbedUrl || ""} onChange={(event) => setPodcastForm({ ...podcastForm, spotifyEmbedUrl: event.target.value })} />
-                  </div>
-                  <div>
-                    <label>Apple Music Embed</label>
-                    <input value={podcastForm.appleMusicEmbedUrl || ""} onChange={(event) => setPodcastForm({ ...podcastForm, appleMusicEmbedUrl: event.target.value })} />
+                    <label>Apple Music Link</label>
+                    <input placeholder="https://music.apple.com/..." value={podcastForm.appleMusicEmbedUrl || ""} onChange={(event) => setPodcastForm({ ...podcastForm, appleMusicEmbedUrl: event.target.value })} />
                   </div>
                   <div>
                     <label>Image URL</label>
@@ -613,7 +609,7 @@ export function Dashboard() {
               {controlsFor(podcastList)}
               <div className="eventList">
                 {podcastList.visible.map((item) => <div className="listItem eventListItem" key={item._id}><div>{item.imageUrl ? <img className="adminListThumb" src={item.imageUrl} alt={item.title} /> : null}<h3>{item.title}</h3><p>{[item.youtubeEmbedUrl && "YouTube", item.spotifyEmbedUrl && "Spotify", item.appleMusicEmbedUrl && "Apple Music"].filter(Boolean).join(" + ") || item.platform}</p><p>{item.description}</p></div><div className="miniActions"><button className="btn" onClick={() => setPodcastForm({ ...emptyPodcast, ...item })}>Edit</button><button className="btn danger" onClick={() => removeItem("/api/admin/podcasts/delete", item._id)}>Delete</button></div></div>)}
-                {!podcastList.filtered.length ? <div className="listItem"><p>No podcast embeds match that search.</p></div> : null}
+                {!podcastList.filtered.length ? <div className="listItem"><p>No podcasts match that search.</p></div> : null}
               </div>
             </div>
           )}
