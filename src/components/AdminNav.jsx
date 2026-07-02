@@ -1,4 +1,4 @@
-import logoUrl from "../assets/logo.png";
+import logoUrl from "../assets/logo-320.png";
 
 export function AdminNav() {
   return (
